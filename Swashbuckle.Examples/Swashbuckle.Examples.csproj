@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <PackageId>Swashbuckle.Examples.Core</PackageId>
+    <RepositoryUrl>https://github.com/hueifeng/Swashbuckle.Examples.Core</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
