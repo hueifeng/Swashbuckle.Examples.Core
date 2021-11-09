@@ -3,6 +3,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.Examples.Attributes;
 using System;
+using System.Linq;
 
 namespace Swashbuckle.Examples
 {
@@ -11,9 +12,10 @@ namespace Swashbuckle.Examples
         public (Type type, string path) GetExamples(SwaggerRequestExampleAttribute attribute, OpenApiDocument swaggerDoc,
             DocumentFilterContext context, ApiDescription apiDescription)
         {
+            var p = apiDescription.ParameterDescriptions.FirstOrDefault();
             if (attribute == null)
             {
-                return (null, null);
+                return (p?.Type, $"/{apiDescription.RelativePath}");
             }
 
             Type type = attribute.RequestType;

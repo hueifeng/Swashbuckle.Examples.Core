@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Swashbuckle.Examples.Attributes;
+using System.Linq;
+using System.Collections;
 
 namespace Swashbuckle.Examples
 {
@@ -16,6 +18,8 @@ namespace Swashbuckle.Examples
         {
             this._examplesProvider = examplesProvider;
         }
+
+
 
         public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
         {
@@ -30,40 +34,44 @@ namespace Swashbuckle.Examples
                 if (type != null)
                 {
                     var val = swaggerDoc.Paths[path];
-                    var apiOperation = val.Operations[OperationType.Post];
-                    swaggerDoc.Paths.Remove(path);
-                    swaggerDoc.Paths.Add(path, new OpenApiPathItem
+                    if (val.Operations.ContainsKey(OperationType.Post))
                     {
-                        Operations = new Dictionary<OperationType, OpenApiOperation>
+                        var apiOperation = val.Operations[OperationType.Post];
+                        swaggerDoc.Paths.Remove(path);
+                        swaggerDoc.Paths.Add(path, new OpenApiPathItem
                         {
-                            [OperationType.Post] = new OpenApiOperation
+                            Operations = new Dictionary<OperationType, OpenApiOperation>
                             {
-                                Tags = new[]
+                                [OperationType.Post] = new OpenApiOperation
                                 {
+                                    Tags = new[]
+                                    {
                                     new OpenApiTag
                                     {
                                         Name = (apiDescription.ActionDescriptor as ControllerActionDescriptor)
                                             ?.ControllerName
                                     }
                                 },
-                                RequestBody = new OpenApiRequestBody
-                                {
-                                    Content = new Dictionary<string, OpenApiMediaType>
+                                    RequestBody = new OpenApiRequestBody
                                     {
-                                        ["application/json"] = new OpenApiMediaType
+                                        Content = new Dictionary<string, OpenApiMediaType>
                                         {
-                                            Schema = context.SchemaGenerator.GenerateSchema(type,
-                                                context.SchemaRepository)
+                                            ["application/json"] = new OpenApiMediaType
+                                            {
+                                                Schema = context.SchemaGenerator.GenerateSchema(type,
+                                                    context.SchemaRepository)
+                                            }
                                         }
-                                    }
-                                },
-                                Summary = apiOperation.Summary
+                                    },
+                                    Summary = apiOperation.Summary
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             }
             //swaggerDoc.Paths = paths;
         }
+
     }
 }
