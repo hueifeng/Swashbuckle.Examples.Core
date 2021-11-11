@@ -21,5 +21,14 @@ namespace Swashbuckle.Examples
             Type type = attribute.RequestType;
             return (type, $"/{apiDescription.RelativePath}");
         }
+
+        public void EndHandler(OpenApiDocument swaggerDoc, DocumentFilterContext context)
+        {
+            
+        }
+
+        public void Initializer(OpenApiDocument swaggerDoc, DocumentFilterContext context)
+        {
+        }
     }
 }

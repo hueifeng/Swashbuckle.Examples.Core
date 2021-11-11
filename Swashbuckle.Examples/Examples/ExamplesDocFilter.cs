@@ -1,12 +1,10 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.Examples.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Microsoft.AspNetCore.Mvc.Controllers;
-using Swashbuckle.Examples.Attributes;
-using System.Linq;
-using System.Collections;
 
 namespace Swashbuckle.Examples
 {
@@ -19,11 +17,9 @@ namespace Swashbuckle.Examples
             this._examplesProvider = examplesProvider;
         }
 
-
-
         public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
         {
-            //var paths = new OpenApiPaths();
+            _examplesProvider.Initializer(swaggerDoc, context);
             foreach (var apiDescription in context.ApiDescriptions)
             {
                 apiDescription.TryGetMethodInfo(out var methodInfo);
@@ -37,6 +33,8 @@ namespace Swashbuckle.Examples
                     if (val.Operations.ContainsKey(OperationType.Post))
                     {
                         var apiOperation = val.Operations[OperationType.Post];
+                        var response = val.Operations[OperationType.Post].Responses;
+
                         swaggerDoc.Paths.Remove(path);
                         swaggerDoc.Paths.Add(path, new OpenApiPathItem
                         {
@@ -46,12 +44,12 @@ namespace Swashbuckle.Examples
                                 {
                                     Tags = new[]
                                     {
-                                    new OpenApiTag
-                                    {
-                                        Name = (apiDescription.ActionDescriptor as ControllerActionDescriptor)
-                                            ?.ControllerName
-                                    }
-                                },
+                                        new OpenApiTag
+                                        {
+                                            Name = (apiDescription.ActionDescriptor as ControllerActionDescriptor)
+                                                ?.ControllerName
+                                        }
+                                    },
                                     RequestBody = new OpenApiRequestBody
                                     {
                                         Content = new Dictionary<string, OpenApiMediaType>
@@ -63,15 +61,16 @@ namespace Swashbuckle.Examples
                                             }
                                         }
                                     },
-                                    Summary = apiOperation.Summary
+                                    Responses = response,
+                                    Summary = apiOperation.Summary,
+
                                 }
                             }
-                        });
+                        }) ;
                     }
                 }
             }
-            //swaggerDoc.Paths = paths;
+            _examplesProvider.EndHandler(swaggerDoc, context);
         }
-
     }
 }

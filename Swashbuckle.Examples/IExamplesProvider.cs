@@ -8,7 +8,12 @@ namespace Swashbuckle.Examples
 {
     public interface IExamplesProvider
     {
+        void Initializer(OpenApiDocument swaggerDoc,
+            DocumentFilterContext context);
+
         (Type type, string path) GetExamples(SwaggerRequestExampleAttribute attribute, OpenApiDocument swaggerDoc,
             DocumentFilterContext context, ApiDescription apiDescription);
+
+        void EndHandler(OpenApiDocument swaggerDoc, DocumentFilterContext context);
     }
 }
