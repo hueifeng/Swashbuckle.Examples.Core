@@ -28,6 +28,13 @@ namespace Swashbuckle.Examples
                 var attribute = methodInfo.GetCustomAttribute<SwaggerRequestExampleAttribute>();
                 (Type type, string path) =
                     _examplesProvider.GetExamples(attribute, swaggerDoc, context, apiDescription);
+                if (GetControllerAndActionAttributes<SwaggerHiddenExampleAttribute>(apiDescription)
+                    .OfType<SwaggerHiddenExampleAttribute>()
+                    .Any())
+                {
+                    swaggerDoc.Paths.Remove(path);
+                    continue;
+                }
 
                 if (type != null)
                 {
@@ -37,14 +44,6 @@ namespace Swashbuckle.Examples
                         var apiOperation = val.Operations[OperationType.Post];
                         var response = val.Operations[OperationType.Post].Responses;
                         swaggerDoc.Paths.Remove(path);
-
-                        if (GetControllerAndActionAttributes<SwaggerHiddenExampleAttribute>(apiDescription)
-                            .OfType<SwaggerHiddenExampleAttribute>()
-                            .Any())
-                        {
-                            continue;
-                        }
-
                         swaggerDoc.Paths.Add(path, new OpenApiPathItem
                         {
                             Operations = new Dictionary<OperationType, OpenApiOperation>
@@ -72,20 +71,20 @@ namespace Swashbuckle.Examples
                                     },
                                     Responses = response,
                                     Summary = apiOperation.Summary,
-
                                 }
                             }
                         });
                     }
                 }
             }
+
             _examplesProvider.EndHandler(swaggerDoc, context);
         }
 
 
         private static IEnumerable<T> GetControllerAndActionAttributes<T>(
-           ApiDescription apiDescription)
-           where T : Attribute
+            ApiDescription apiDescription)
+            where T : Attribute
         {
             apiDescription.TryGetMethodInfo(out var methodInfo);
             var customAttributes1 = methodInfo.DeclaringType.GetTypeInfo().GetCustomAttributes<T>();
@@ -94,6 +93,5 @@ namespace Swashbuckle.Examples
             objList.AddRange(customAttributes2);
             return objList;
         }
-
     }
 }
