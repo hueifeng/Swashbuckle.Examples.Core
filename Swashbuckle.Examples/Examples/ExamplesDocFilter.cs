@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc.Controllers;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.Examples.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
 
 namespace Swashbuckle.Examples
 {
@@ -14,7 +16,7 @@ namespace Swashbuckle.Examples
 
         public ExamplesDocFilter(IExamplesProvider examplesProvider)
         {
-            this._examplesProvider = examplesProvider;
+            _examplesProvider = examplesProvider;
         }
 
         public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
@@ -34,8 +36,15 @@ namespace Swashbuckle.Examples
                     {
                         var apiOperation = val.Operations[OperationType.Post];
                         var response = val.Operations[OperationType.Post].Responses;
-
                         swaggerDoc.Paths.Remove(path);
+
+                        if (GetControllerAndActionAttributes<SwaggerHiddenExampleAttribute>(apiDescription)
+                            .OfType<SwaggerHiddenExampleAttribute>()
+                            .Any())
+                        {
+                            continue;
+                        }
+
                         swaggerDoc.Paths.Add(path, new OpenApiPathItem
                         {
                             Operations = new Dictionary<OperationType, OpenApiOperation>
@@ -66,11 +75,25 @@ namespace Swashbuckle.Examples
 
                                 }
                             }
-                        }) ;
+                        });
                     }
                 }
             }
             _examplesProvider.EndHandler(swaggerDoc, context);
         }
+
+
+        private static IEnumerable<T> GetControllerAndActionAttributes<T>(
+           ApiDescription apiDescription)
+           where T : Attribute
+        {
+            apiDescription.TryGetMethodInfo(out var methodInfo);
+            var customAttributes1 = methodInfo.DeclaringType.GetTypeInfo().GetCustomAttributes<T>();
+            var customAttributes2 = methodInfo.GetCustomAttributes<T>();
+            var objList = new List<T>(customAttributes1);
+            objList.AddRange(customAttributes2);
+            return objList;
+        }
+
     }
 }
